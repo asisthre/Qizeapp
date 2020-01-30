@@ -1,5 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:quiz_app/question_brain.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
+import 'question_brain.dart';
+
+QuestionBrain questionBrain= new QuestionBrain();
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -27,14 +33,60 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  int score=0;
   List<Widget> scoreKeeper=[];
-  List<String> question=[
-    "Flutter is created by google.",
-    "Mt.everest is not the highest mountain of the world.",
-    "Birds can fly."
-  ];
-  int questionNumber=0;
-  List<bool> answers=[true,false,true];
+   checkAnswer({bool userAnswer}){
+    setState(() {
+      if (questionBrain.isFinished()){
+//        Alert(
+//            context: context,
+//            title:"The number of questions are finished",
+//            desc:"You have scored $score question").show();
+        Alert(
+          context: context,
+          title: "The number of questions are finished",
+          desc: "You have scored $score question",
+          buttons: [
+            DialogButton(
+              child: Text(
+                "Play Again",
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+              onPressed: () {
+                score=0;
+                Navigator.pop(context);
+                },
+              color: Colors.green,
+              radius: BorderRadius.circular(0.0),
+            ),
+          ],
+        ).show();
+        scoreKeeper.clear();
+        questionBrain.reset();
+      }
+      else{
+        if(questionBrain.getAnswerResult() == userAnswer){
+          scoreKeeper.add(
+              Icon(
+                Icons.check,
+                color: Colors.green,
+                size:24,
+              ));
+          score++;
+        }
+        else{
+          scoreKeeper.add(
+              Icon(
+                Icons.close,
+                color: Colors.red,
+                size:24,
+              ));
+        }
+        questionBrain.nextQuestion();
+      }
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +100,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                question[questionNumber],
+                questionBrain.getQuestionText(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -71,25 +123,7 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                setState(() {
-                  if(answers[questionNumber]==true){
-                    scoreKeeper.add(
-                        Icon(
-                          Icons.check,
-                          color: Colors.green,
-                          size:24,
-                        ));
-                  }
-                  else{
-                    scoreKeeper.add(
-                        Icon(
-                          Icons.close,
-                          color: Colors.red,
-                          size:24,
-                        ));
-                  }
-                  questionNumber++;
-                });
+                  checkAnswer(userAnswer: true);
               },
             ),
           ),
@@ -107,31 +141,17 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                setState(() {
-                  if(answers[questionNumber]==false){
-                    scoreKeeper.add(
-                        Icon(
-                          Icons.check,
-                          color: Colors.green,
-                          size:24,
-                        ));
-                  }
-                  else{
-                    scoreKeeper.add(
-                        Icon(
-                          Icons.close,
-                          color: Colors.red,
-                          size:24,
-                        ));
-                  }
-                  questionNumber++;
-                });
+                checkAnswer(userAnswer: false);
               },
             ),
           ),
         ),
-       Row(
-         children: scoreKeeper,
+       SingleChildScrollView(
+         scrollDirection: Axis.horizontal,
+         padding: EdgeInsets.symmetric(vertical: 10.0),
+         child: Row(
+           children: scoreKeeper,
+         ),
        ),
       ],
     );
